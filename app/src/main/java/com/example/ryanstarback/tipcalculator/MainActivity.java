@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.subtotal_price_edit_text) EditText subtotalEditText;
     @BindView(R.id.score_text_view) TextView scoreTextView;
     @BindView(R.id.score_rating_bar) RatingBar scoreRatingBar;
-    @BindView(R.id.total_price_text_view) TextView totalPriceTextView;
+    @BindView(R.id.total_tip_text_view) TextView totalTipTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        totalPriceTextView.setText(String.format(getString(R.string.total_price), "$0.00"));
+        totalTipTextView.setText(String.format(getString(R.string.total_tip), "$0.00"));
 
         Observable<Double> subtotalObserver = RxTextView.textChanges(subtotalEditText)
                 .filter(s -> s.length() > 0)
@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
             scoreTextView.setText(String.format(getString(R.string.score), score));
         });
 
-        Observable<Double> tipObserver = scoreObserver.map(score -> {
+        Observable<Double> tipPercentageObserver = scoreObserver.map(score -> {
             if (score == 10) {
                 return 0.25;
             } else if (score == 8 || score == 9) {
@@ -63,12 +63,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Observable.combineLatest(subtotalObserver, tipObserver, (subtotal, tip) -> {
-           return subtotal + subtotal*tip;
-        }).subscribe(total -> {
+        Observable.combineLatest(subtotalObserver, tipPercentageObserver, (subtotal, tipPercentage) -> {
+           return subtotal*tipPercentage;
+        }).subscribe(totalTip -> {
             NumberFormat format = NumberFormat.getCurrencyInstance(Locale.getDefault());
             format.setCurrency(Currency.getInstance(Locale.getDefault()));
-            totalPriceTextView.setText(String.format(getString(R.string.total_price), format.format(total)));
+            totalTipTextView.setText(String.format(getString(R.string.total_tip), format.format(totalTip)));
         });
     }
 }
